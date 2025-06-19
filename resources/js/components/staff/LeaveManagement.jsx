@@ -52,9 +52,9 @@ const LeaveManagement = () => {
   }, []);
   // Calculate leave statistics
   useEffect(() => {
-    const approved = leaveRequests.filter(req => req.status === "approved").length;
-    const pending = leaveRequests.filter(req => req.status === "pending").length;
-    const rejected = leaveRequests.filter(req => req.status === "rejected").length;
+    const approved = leaveRequests.filter(req => req.hr_status === "approved").length;
+    const pending = leaveRequests.filter(req => req.hr_status === "pending").length;
+    const rejected = leaveRequests.filter(req => req.hr_status === "rejected").length;
     const totalDays = leaveRequests
       .filter(req => req.status === "approved")
       .reduce((sum, req) => sum + req.days, 0);
@@ -64,10 +64,10 @@ const LeaveManagement = () => {
 
   // Filter and search functionality
   const filteredRequests = leaveRequests.filter(request => {
-    const matchesStatus = filterStatus === "All" || request.status === filterStatus;
+    const matchesStatus = filterStatus === "All" || request.hr_status === filterStatus;
     const matchesSearch =
-      (request?.type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (request?.reason?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+      (request?.leave_type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (request?.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
   
     return matchesStatus && matchesSearch;
   });
@@ -350,13 +350,6 @@ const handleSubmit = async () => {
                       </button>
                       {leave.hr_status === "pending" && (
                         <>
-                          <button
-                            onClick={() => handleEdit(leave)}
-                            className="text-yellow-600 hover:text-yellow-800 transition-colors p-1 rounded hover:bg-yellow-50"
-                            title="Edit Request"
-                          >
-                            <Edit3 size={16} />
-                          </button>
                           <button
                             onClick={() => handleDelete(leave.id)}
                             className="text-red-600 hover:text-red-800 transition-colors p-1 rounded hover:bg-red-50"

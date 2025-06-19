@@ -1,91 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, User, Clock, CheckCircle, XCircle, FileText, Filter, Search, Bell, MoreVertical, Eye, Download, MessageCircle } from 'lucide-react';
-
+import axios from 'axios';
+import { Token } from '@mui/icons-material';
+const token = localStorage.getItem("token");
 const LeaveApprovalSystem = () => {
   const [selectedFilter, setSelectedFilter] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  // Sample leave requests data
-  const [leaveRequests, setLeaveRequests] = useState([
-    {
-      id: 1,
-      employeeName: 'John Smith',
-      employeeId: 'EMP001',
-      department: 'Engineering',
-      position: 'Senior Developer',
-      leaveType: 'Annual Leave',
-      startDate: '2025-06-20',
-      endDate: '2025-06-24',
-      duration: '5 days',
-      reason: 'Family vacation to Kerala',
-      appliedDate: '2025-06-10',
-      status: 'pending',
-      urgency: 'normal',
-      remainingLeave: 12,
-      contactDuringLeave: '+91 98765 43210',
-      workHandover: 'Tasks assigned to team lead, documentation updated',
-      avatar: 'JS'
-    },
-    {
-      id: 2,
-      employeeName: 'Priya Sharma',
-      employeeId: 'EMP002',
-      department: 'Marketing',
-      position: 'Marketing Manager',
-      leaveType: 'Sick Leave',
-      startDate: '2025-06-15',
-      endDate: '2025-06-17',
-      duration: '3 days',
-      reason: 'Medical procedure - surgery recovery',
-      appliedDate: '2025-06-13',
-      status: 'pending',
-      urgency: 'high',
-      remainingLeave: 8,
-      contactDuringLeave: '+91 87654 32109',
-      workHandover: 'Campaign reviews delegated to assistant manager',
-      avatar: 'PS'
-    },
-    {
-      id: 3,
-      employeeName: 'Rajesh Kumar',
-      employeeId: 'EMP003',
-      department: 'Finance',
-      position: 'Accountant',
-      leaveType: 'Personal Leave',
-      startDate: '2025-06-18',
-      endDate: '2025-06-19',
-      duration: '2 days',
-      reason: 'House shifting',
-      appliedDate: '2025-06-12',
-      status: 'approved',
-      urgency: 'normal',
-      remainingLeave: 15,
-      contactDuringLeave: '+91 76543 21098',
-      workHandover: 'Monthly reports completed ahead of schedule',
-      avatar: 'RK'
-    },
-    {
-      id: 4,
-      employeeName: 'Anita Patel',
-      employeeId: 'EMP004',
-      department: 'HR',
-      position: 'HR Executive',
-      leaveType: 'Maternity Leave',
-      startDate: '2025-07-01',
-      endDate: '2025-09-30',
-      duration: '92 days',
-      reason: 'Maternity leave',
-      appliedDate: '2025-06-05',
-      status: 'denied',
-      urgency: 'high',
-      remainingLeave: 0,
-      contactDuringLeave: '+91 65432 10987',
-      workHandover: 'Comprehensive handover document prepared',
-      denyReason: 'Insufficient documentation provided',
-      avatar: 'AP'
-    }
-  ]);
+  const [leaveRequests, setLeaveRequests] = useState([]);
+
+
+  useEffect(()=>{
+    axios.get('/college/staff/leaves',{
+      headers:{
+        Authorization: token,
+      },
+    })
+    .then(response=>{
+      setLeaveRequests(response.data.data);
+    })
+    .catch(err => {
+      const errorMessage = err.response?.data?.message || 'Something went wrong.';
+      setLeaveRequests(errorMessage);
+    });
+
+  },[]);
+
   const closeModal = () => {
     setSelectedRequest(false);
   };
@@ -107,11 +48,19 @@ const LeaveApprovalSystem = () => {
 
   const filteredRequests = leaveRequests.filter(request => {
     const matchesFilter = selectedFilter === 'all' || request.status === selectedFilter;
-    const matchesSearch = request.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.department.toLowerCase().includes(searchTerm.toLowerCase());
+  
+    const name = request.employeeName?.toLowerCase() || '';
+    const id = request.employeeId?.toLowerCase() || '';
+    const department = request.department?.toLowerCase() || '';
+  
+    const matchesSearch =
+      name.includes(searchTerm.toLowerCase()) ||
+      id.includes(searchTerm.toLowerCase()) ||
+      department.includes(searchTerm.toLowerCase());
+  
     return matchesFilter && matchesSearch;
   });
+  
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -181,7 +130,7 @@ const LeaveApprovalSystem = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Approved</p>
-                <p className="text-2xl font-bold text-gray-900">{leaveRequests.filter(req => req.status === 'approved').length}</p>
+                <p className="text-2xl font-bold text-gray-900">{leaveRequests.filter(req => req.hr_status === 'approved').length}</p>
                 <p className="text-xs text-emerald-600 font-medium">This Month</p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-green-100 rounded-lg flex items-center justify-center">
@@ -287,7 +236,7 @@ const LeaveApprovalSystem = () => {
                         <div>
                           <p className="text-xs font-medium text-gray-500 mb-1">Leave Type</p>
                           <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getLeaveTypeColor(request.leaveType)}`}>
-                            {request.leaveType}
+                            {request.leave_type}
                           </span>
                         </div>
                         <div>

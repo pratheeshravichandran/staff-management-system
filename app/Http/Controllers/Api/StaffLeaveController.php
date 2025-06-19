@@ -162,16 +162,28 @@ public function showCollegeLeaves()
     try {
         $authUser = Auth::user();
 
-        $leaves = StaffLeave::with('staff:id,first_name,last_name,email') 
-            ->whereHas('staff', function ($query) use ($authUser) {
-                $query->where('college_id', $authUser->college_id);
-            })
+        $leaves = StaffLeave::with('staff:id,first_name,last_name,email,staff_id,designation,profile_pic')
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($leave) {
+                // Convert supporting file path to URL
                 $leave->supporting_file = $leave->supporting_file
                     ? $this->getUrl($leave->supporting_file)
                     : null;
+
+                // Format staff data
+                if ($leave->staff) {
+                    $staff = $leave->staff;
+
+                    // Merge name
+                    $staff->name = $staff->first_name . ' ' . $staff->last_name;
+
+                    // Convert profile picture to URL
+                    if ($staff->profile_pic && !str_starts_with($staff->profile_pic, 'http')) {
+                        $staff->profile_pic = $this->getUrl($staff->profile_pic);
+                    }
+                }
+
                 return $leave;
             });
 
@@ -189,7 +201,6 @@ public function showCollegeLeaves()
         ], 500);
     }
 }
-
 
 
 }
