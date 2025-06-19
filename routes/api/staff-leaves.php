@@ -8,7 +8,7 @@ Route::middleware('auth:sanctum','check.role:Staff')->group(function () {
     Route::post('/staff/leaves', [StaffLeaveController::class, 'store']);
     Route::delete('/staff/leaves/{id}', [StaffLeaveController::class, 'destroy']);
 });
-Route::middleware('auth:sanctum','check.role:HR')->group(function () {
+Route::middleware('auth:sanctum','check.role:HR,Admin')->group(function () {
     Route::put('/staff/leaves/status/{id}', [StaffLeaveController::class, 'updateStatus']);
     Route::get('/college/staff/leaves', [StaffLeaveController::class, 'showCollegeLeaves']);
 });

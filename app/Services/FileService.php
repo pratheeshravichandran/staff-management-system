@@ -33,5 +33,13 @@ class FileService
     $filePath = ltrim($filePath, '/');
     return url('storage/' . $filePath);
 }
-
+public function delete($filePath)
+{
+    try {
+        return Storage::delete($filePath);
+    } catch (\Exception $e) {
+        \Log::error("Failed to delete file: {$filePath}. Error: " . $e->getMessage());
+        return false;
+    }
+}
 }
