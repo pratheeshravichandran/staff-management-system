@@ -12,6 +12,6 @@ Route::middleware(['auth:sanctum','check.role:HR,Admin'])->group(function () {
 Route::middleware('auth:sanctum','check.role:HR,Staff,Manager')->group(function () {
     Route::get('/payroll/my', [StaffPayrollController::class, 'getMyPayroll']);
 });
-Route::middleware('auth:sanctum','check.role:HR,Admin,Staff')->group(function () {
+Route::middleware('auth:sanctum','check.role:HR,Admin,Staff,Manager')->group(function () {
     Route::get('/staff-payroll/{staffId}', [StaffPayrollController::class, 'getPayrollByStaffId']);
 });

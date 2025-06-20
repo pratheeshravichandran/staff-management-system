@@ -12,7 +12,7 @@ import LoginPage from './components/LoginPage';
 import AdminDashboard from './components/AdminDashboard';
 import HRDashboard from './components/HRDashboard';
 import StaffDashboard from './components/staff/StaffDashboard';
-import ManagerDashboard from './components/ManagerDashboard';
+import ManagerDashboard from './components/manager/ManagerDashboard';
 import DashboardOverview from "./components/staff/DashboardOverview";
 import LeaveRequestPage from "./components/staff/LeaveManagement";
 

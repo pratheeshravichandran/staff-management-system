@@ -30,28 +30,71 @@ const LeaveApprovalSystem = () => {
   const closeModal = () => {
     setSelectedRequest(false);
   };
-  const handleApproval = (requestId, action, reason = '') => {
-    setLeaveRequests(prev => 
-      prev.map(request => 
-        request.id === requestId 
-          ? { 
-              ...request, 
-              status: action,
-              processedDate: new Date().toISOString().split('T')[0],
-              ...(action === 'denied' && reason && { denyReason: reason })
-            }
-          : request
-      )
-    );
-    closeModal();
+  
+
+  const handleApproval = async (requestId, action) => {
+    try {
+      const response = await axios.put(
+        `/staff/leaves/status/${requestId}`,
+        {
+          hr_status: action
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );      
+      setLeaveRequests(prev =>
+        prev.map(request =>
+          request.id === requestId
+            ? {
+                ...request,
+                hr_status: action,
+                ...(action === 'rejected')
+              }
+            : request
+        )
+      );
+  
+      alert(response.data.message); // ✅ show backend success message
+      closeModal();
+  
+    } catch (error) {
+      if (error.response) {
+        const res = error.response.data;
+    
+        // Check for validation errors
+        if (res.errors) {
+          const messages = Object.values(res.errors).flat().join('\n');
+          alert(`Validation Error:\n${messages}`);
+        } else if (res.backend_message) {
+          alert(`Error: ${res.backend_message}`);
+        } else {
+          alert("An unknown error occurred.");
+        }
+    
+      } else {
+        alert("Network error. Please check your connection.");
+      }
+    }
   };
 
-  const filteredRequests = leaveRequests.filter(request => {
-    const matchesFilter = selectedFilter === 'all' || request.status === selectedFilter;
+
+  const calculateDays = (start, end) => {
+    const fromDate = new Date(start);
+    const toDate = new Date(end);
+    const diffTime = Math.abs(toDate - fromDate);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  };
   
-    const name = request.employeeName?.toLowerCase() || '';
-    const id = request.employeeId?.toLowerCase() || '';
-    const department = request.department?.toLowerCase() || '';
+
+  const filteredRequests = leaveRequests.filter(request => {
+    const matchesFilter = selectedFilter === 'all' || request.hr_status === selectedFilter;
+  
+    const name = request.staff.name?.toLowerCase() || '';
+    const id = request.staff.staff_id?.toLowerCase() || '';
+    const department = request.staff.department.name?.toLowerCase() || '';
   
     const matchesSearch =
       name.includes(searchTerm.toLowerCase()) ||
@@ -65,7 +108,7 @@ const LeaveApprovalSystem = () => {
   const getStatusColor = (status) => {
     switch(status) {
       case 'approved': return 'text-emerald-700 bg-emerald-50 border-emerald-200';
-      case 'denied': return 'text-red-700 bg-red-50 border-red-200';
+      case 'rejected': return 'text-red-700 bg-red-50 border-red-200';
       case 'pending': return 'text-amber-700 bg-amber-50 border-amber-200';
       default: return 'text-gray-700 bg-gray-50 border-gray-200';
     }
@@ -75,7 +118,7 @@ const LeaveApprovalSystem = () => {
     switch(type) {
       case 'Casual Leave': return 'bg-blue-100 text-blue-800';
       case 'Sick Leave': return 'bg-red-100 text-red-800';
-      case 'Personal Leave': return 'bg-purple-100 text-purple-800';
+      case 'Permission': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -143,7 +186,7 @@ const LeaveApprovalSystem = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Rejected</p>
-                <p className="text-2xl font-bold text-gray-900">{leaveRequests.filter(req => req.status === 'denied').length}</p>
+                <p className="text-2xl font-bold text-gray-900">{leaveRequests.filter(req => req.hr_status === 'rejected').length}</p>
                 <p className="text-xs text-red-600 font-medium">This Month</p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-rose-100 rounded-lg flex items-center justify-center">
@@ -180,7 +223,7 @@ const LeaveApprovalSystem = () => {
                   <option value="pending">Pending Requests</option>
                   <option value="all">All Requests</option>
                   <option value="approved">Approved</option>
-                  <option value="denied">Rejected</option>
+                  <option value="rejected">Rejected</option>
                 </select>
               </div>
               <div className="flex-1 relative">
@@ -203,49 +246,52 @@ const LeaveApprovalSystem = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4 flex-1">
                     {/* Avatar */}
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm font-medium">{request.avatar}</span>
-                    </div>
+                  
+                    <img 
+  src={request.staff.profile_pic} 
+  alt="Profile" 
+  className="w-10 h-10 rounded-full object-cover" 
+/>
+
+            
                     
                     {/* Employee Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{request.employeeName}</h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(request.status)}`}>
-                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        <h3 className="text-lg font-semibold text-gray-900">{request.staff.name}</h3>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(request.hr_status)}`}>
+                          {request.hr_status.charAt(0).toUpperCase() + request.hr_status.slice(1)}
                         </span>
-                        {request.urgency === 'high' && (
-                          <span className="px-2 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full font-medium">
-                            Urgent
-                          </span>
-                        )}
                       </div>
                       
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
                         <span className="flex items-center gap-1">
                           <User className="w-4 h-4" />
-                          {request.employeeId}
+                          {request.staff.staff_id}
                         </span>
                         <span>•</span>
-                        <span>{request.department}</span>
+                        <span>{request.staff.department.name}</span>
                         <span>•</span>
-                        <span>{request.position}</span>
+                        <span>{request.staff.designation}</span>
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
                         <div>
                           <p className="text-xs font-medium text-gray-500 mb-1">Leave Type</p>
-                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getLeaveTypeColor(request.leaveType)}`}>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getLeaveTypeColor(request.leave_type)}`}>
                             {request.leave_type}
                           </span>
                         </div>
                         <div>
                           <p className="text-xs font-medium text-gray-500 mb-1">Duration</p>
-                          <p className="text-sm font-medium text-gray-900">{request.duration}</p>
+                          <span className="text-sm font-medium text-gray-900">
+  {calculateDays(request.start_date, request.end_date)} day
+  {calculateDays(request.start_date, request.end_date) > 1 ? 's' : ''}
+</span>
                         </div>
                         <div>
                           <p className="text-xs font-medium text-gray-500 mb-1">Leave Period</p>
-                          <p className="text-sm text-gray-700">{request.startDate} to {request.endDate}</p>
+                          <p className="text-sm text-gray-700">{request.start_date} to {request.end_date}</p>
                         </div>
                         <div>
                           <p className="text-xs font-medium text-gray-500 mb-1">Remaining Leave</p>
@@ -255,15 +301,8 @@ const LeaveApprovalSystem = () => {
 
                       <div className="mb-4">
                         <p className="text-xs font-medium text-gray-500 mb-1">Reason</p>
-                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded-lg">{request.reason}</p>
+                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded-lg">{request.description}</p>
                       </div>
-
-                      {request.status === 'denied' && request.denyReason && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <p className="text-xs font-medium text-red-800 mb-1">Rejection Reason:</p>
-                          <p className="text-sm text-red-700">{request.denyReason}</p>
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -277,12 +316,9 @@ const LeaveApprovalSystem = () => {
                       >
                         <Eye className="w-5 h-5" />
                       </button>
-                      <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                        <MoreVertical className="w-5 h-5" />
-                      </button>
                     </div>
 
-                    {request.status === 'pending' && (
+                    {request.hr_status === 'pending' && (
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleApproval(request.id, 'approved')}
@@ -291,7 +327,7 @@ const LeaveApprovalSystem = () => {
                           Approve
                         </button>
                         <button
-                          onClick={() => {handleApproval(request.id, 'denied');}}
+                          onClick={() => {handleApproval(request.id, 'rejected');}}
                           className="px-4 py-2 bg-gradient-to-r from-red-500 to-rose-600 text-white text-sm font-medium rounded-lg hover:from-red-600 hover:to-rose-700 transition-all duration-200 shadow-sm"
                         >
                           Reject
@@ -335,22 +371,22 @@ const LeaveApprovalSystem = () => {
                     </h3>
                     <div className="space-y-4 bg-gray-50 p-4 rounded-xl">
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-lg font-medium">{selectedRequest.avatar}</span>
+                        <div>
+                        <img src={selectedRequest.staff.profile_pic} alt="Profile" className="w-20 h-20 rounded-full object-cover"/>
                         </div>
                         <div>
-                          <p className="font-semibold text-lg text-gray-900">{selectedRequest.employeeName}</p>
-                          <p className="text-gray-600">{selectedRequest.position}</p>
+                          <p className="font-semibold text-lg text-gray-900">{selectedRequest.staff.name}</p>
+                          <p className="text-gray-600">{selectedRequest.staff.designation}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm font-medium text-gray-700">Employee ID</p>
-                          <p className="text-sm text-gray-600">{selectedRequest.employeeId}</p>
+                          <p className="text-sm text-gray-600">{selectedRequest.staff.staff_id}</p>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-700">Department</p>
-                          <p className="text-sm text-gray-600">{selectedRequest.department}</p>
+                          <p className="text-sm text-gray-600">{selectedRequest.staff.department.name}</p>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-700">Leave Balance</p>
@@ -358,7 +394,7 @@ const LeaveApprovalSystem = () => {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-700">Contact</p>
-                          <p className="text-sm text-gray-600">{selectedRequest.contactDuringLeave}</p>
+                          <p className="text-sm text-gray-600">{selectedRequest.staff.phone_number}</p>
                         </div>
                       </div>
                     </div>
@@ -373,29 +409,32 @@ const LeaveApprovalSystem = () => {
                     </h3>
                     <div className="space-y-4 bg-gray-50 p-4 rounded-xl">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getLeaveTypeColor(selectedRequest.leaveType)}`}>
-                          {selectedRequest.leaveType}
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getLeaveTypeColor(selectedRequest.leave_type)}`}>
+                          {selectedRequest.leave_type}
                         </span>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedRequest.status)}`}>
-                          {selectedRequest.status.charAt(0).toUpperCase() + selectedRequest.status.slice(1)}
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedRequest.hr_status)}`}>
+                          {selectedRequest.hr_status.charAt(0).toUpperCase() + selectedRequest.hr_status.slice(1)}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm font-medium text-gray-700">Duration</p>
-                          <p className="text-sm font-semibold text-gray-900">{selectedRequest.duration}</p>
+                          <span className="text-sm font-medium text-gray-900">
+  {calculateDays(selectedRequest.start_date, selectedRequest.end_date)} day
+  {calculateDays(selectedRequest.start_date, selectedRequest.end_date) > 1 ? 's' : ''}
+</span>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-700">Applied Date</p>
-                          <p className="text-sm text-gray-600">{selectedRequest.appliedDate}</p>
+                          <p className="text-sm text-gray-600">{selectedRequest.created_at?.split('T')[0]}</p>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-700">Start Date</p>
-                          <p className="text-sm text-gray-600">{selectedRequest.startDate}</p>
+                          <p className="text-sm text-gray-600">{selectedRequest.start_date}</p>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-700">End Date</p>
-                          <p className="text-sm text-gray-600">{selectedRequest.endDate}</p>
+                          <p className="text-sm text-gray-600">{selectedRequest.end_date}</p>
                         </div>
                       </div>
                     </div>
@@ -409,20 +448,28 @@ const LeaveApprovalSystem = () => {
                     <MessageCircle className="w-5 h-5 text-purple-600" />
                     Reason for Leave
                   </h3>
-                  <p className="text-gray-700 bg-purple-50 p-4 rounded-xl border border-purple-100">{selectedRequest.reason}</p>
+                  <p className="text-gray-700 bg-purple-50 p-4 rounded-xl border border-purple-100">{selectedRequest.description}</p>
                 </div>
 
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <FileText className="w-5 h-5 text-orange-600" />
-                    Work Handover Details
+                    Supporting File
                   </h3>
-                  <p className="text-gray-700 bg-orange-50 p-4 rounded-xl border border-orange-100">{selectedRequest.workHandover}</p>
+                  <a 
+  href={selectedRequest.supporting_file} 
+  target="_blank" 
+  rel="noopener noreferrer"
+  className="text-blue-600 underline bg-orange-50 p-4 rounded-xl border border-orange-100 inline-block"
+>
+  View / Download Supporting File
+</a>
+
                 </div>
               </div>
 
               {/* Approval Actions */}
-              {selectedRequest.status === 'pending' && (
+              {selectedRequest.hr_status === 'pending' && (
                 <div className="flex gap-4 mt-8 pt-6 border-t border-gray-100">
                   <button
                     onClick={() => handleApproval(selectedRequest.id, 'approved')}
@@ -433,7 +480,7 @@ const LeaveApprovalSystem = () => {
                   </button>
                   <button
                     onClick={() => {
-                        handleApproval(selectedRequest.id, 'denied');
+                        handleApproval(selectedRequest.id, 'rejected');
                     }}
                     className="flex-1 bg-gradient-to-r from-red-500 to-rose-600 text-white py-4 px-6 rounded-xl hover:from-red-600 hover:to-rose-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2 shadow-lg"
                   >

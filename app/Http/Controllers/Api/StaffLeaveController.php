@@ -162,7 +162,10 @@ public function showCollegeLeaves()
     try {
         $authUser = Auth::user();
 
-        $leaves = StaffLeave::with('staff:id,first_name,last_name,email,staff_id,designation,profile_pic')
+        $leaves = StaffLeave::with([
+                'staff:id,first_name,last_name,email,staff_id,designation,profile_pic,department_id,phone_number',
+                'staff.department:id,name' // ✅ Eager load department too
+            ])
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($leave) {
@@ -182,6 +185,9 @@ public function showCollegeLeaves()
                     if ($staff->profile_pic && !str_starts_with($staff->profile_pic, 'http')) {
                         $staff->profile_pic = $this->getUrl($staff->profile_pic);
                     }
+
+                    // ✅ Safely get department name if available
+                    $staff->department = $staff->department->name ?? null;
                 }
 
                 return $leave;

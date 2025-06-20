@@ -16,6 +16,7 @@ import {
   Edit3
 } from "lucide-react";
 
+
 const LeaveManagement = () => {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const token = localStorage.getItem("token");
@@ -133,11 +134,11 @@ const handleSubmit = async () => {
     setShowLeaveModal(false);
     setEditingLeave(null);
     setFormData({
-      type: "Sick Leave",
-      from: "",
-      to: "",
-      reason: "",
-      file: null,
+      leave_type: "Sick Leave",
+      start_date: "",
+      end_date: "",
+      description: "",
+      supporting_file: null,
     });
   };
 
@@ -329,7 +330,7 @@ const handleSubmit = async () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full border ${getStatusColor(leave.status)}`}>
+                    <span className={`px-3 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full border ${getStatusColor(leave.hr_status)}`}>
                       {getStatusIcon(leave.hr_status)}
                       <span className="ml-1">{leave.hr_status}</span>
                     </span>
@@ -513,7 +514,7 @@ const handleSubmit = async () => {
               
               <div>
                 <p className="text-sm font-semibold text-gray-600">Status</p>
-                <span className={`px-3 py-1 inline-flex items-center text-sm leading-5 font-semibold rounded-full border ${getStatusColor(showDetails.status)}`}>
+                <span className={`px-3 py-1 inline-flex items-center text-sm leading-5 font-semibold rounded-full border ${getStatusColor(showDetails.hr_status)}`}>
                   {getStatusIcon(showDetails.hr_status)}
                   <span className="ml-1">{showDetails.hr_status}</span>
                 </span>

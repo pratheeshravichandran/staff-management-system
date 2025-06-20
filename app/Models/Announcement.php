@@ -1,26 +1,26 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class StaffLeave extends Model
+class Announcement extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'staff_id',
-        'leave_type',
-        'start_date',
-        'end_date',
-        'description',
-        'supporting_file',
-        'hr_status',
+        'user_id',
+        'title',
+        'message',
+        'sent_by',
+        'file',
+        'published_at',
     ];
 
-    public function staff()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'staff_id');
+        return $this->belongsTo(User::class, 'sent_by', 'id');
     }
     public function department()
     {
