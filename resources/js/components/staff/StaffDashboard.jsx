@@ -20,7 +20,7 @@ import LeaveManagement from './LeaveManagement';
 import ProfileManagement from './ProfileManagement';
 import PayslipModule from './PayslipModule';
 import TasksModule from './TasksModule';
-import AnnouncementsModule from './AnnouncementsModule';
+import AnnouncementsModule from './Announcements';
 import Sidebar from './Sidebar';
 
 const StaffDashboard = () => {

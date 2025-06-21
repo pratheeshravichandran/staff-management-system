@@ -71,9 +71,9 @@ export default function LoginPage() {
     // Store token or user info if needed
     const token = response.data.access_token;
     localStorage.setItem('token', `Bearer ${token}`);
-
     alert('Login successful!');
-    const role = response.data.user?.roles?.role_name; // assuming response contains user
+    const role = response.data.user?.roles?.role_name;
+    localStorage.setItem('userRole', role); // assuming response contains user
     const path = roleToPath[role];
     navigate(path);
      // redirect to Dashboard page

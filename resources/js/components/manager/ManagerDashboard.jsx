@@ -24,7 +24,7 @@ import LeaveManagement from '../staff/LeaveManagement';
 import ProfileManagement from '../staff/ProfileManagement';
 import PayslipModule from '../staff/PayslipModule';
 import TasksModule from '../staff/TasksModule';
-import AnnouncementsModule from '../staff/AnnouncementsModule';
+import AnnouncementsModule from '../Announcements';
 import Sidebar from './Sidebar';
 import axios from 'axios';
 

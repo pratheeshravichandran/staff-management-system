@@ -34,9 +34,8 @@ class AnnouncementController extends Controller
     public function index()
     {
         try {
-            $user = auth()->user();
-            $announcements = Announcement::where('user_id', $user->id)
-                ->orderBy('published_at', 'desc')
+            $announcements = Announcement::
+                 orderBy('published_at', 'desc')
                 ->get()
                 ->map(function ($announcement) {
                     if ($announcement->file) {
@@ -54,28 +53,7 @@ class AnnouncementController extends Controller
         }
     }
 
-    public function getOptions()
-    {
-        $user = Auth::user();
-        try {
-            $collegeId = $user->college_id;
-            $degrees = Degree::where('college_id', $collegeId)->get();
-            $departments = Department::whereIn('degree_id', $degrees->pluck('id'))->get();
-            $batches = Batch::whereIn('department_id', $departments->pluck('id'))
-                        ->active()
-                        ->get();
-            $classes = ClassModel::whereIn('batch_id', $batches->pluck('id'))->get();
-            return response()->json([
-                'degrees' => $degrees,
-                'departments' => $departments,
-                'batches' => $batches,
-                'classes' => $classes,
-            ]);
-        } catch (Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
+   
     public function store(Request $request)
     {
         $user = Auth::user();    

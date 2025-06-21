@@ -7,6 +7,7 @@ import ReportManagement from "./ReportManagement";
 import AttendanceManagement from "./AttendanceManagement";
 import PayrollManagement from "./PayrollManagement";
 import LeaveApproval from "./LeaveApproval";
+import Announcements from "./Announcements";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from "recharts";
 import {
   Bell,
@@ -23,7 +24,7 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
-  CalendarDays
+  CalendarDays,
 } from "lucide-react";
 import StaffManagement from './StaffManagement';
 
@@ -38,15 +39,11 @@ export default function AdminDashboard() {
   const [genders, setGenders] = useState([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const [activeTab, setActiveTab] = useState(() => {
-  return localStorage.getItem("activeTab");
-}); // <-- missing closing parenthesis here
+ 
 
-useEffect(() => {
-  localStorage.setItem("activeTab", currentView);
-}, [currentView]);
-
-
+  useEffect(() => {
+    localStorage.setItem("activeTab", currentView);
+  }, [currentView]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -141,6 +138,7 @@ useEffect(() => {
     { id: "leaves", label: "Leaves", icon: CalendarDays },
     { id: "payroll", label: "Payroll", icon: ClipboardList },
     { id: "tasks", label: "Tasks", icon: ClipboardList },
+    { id: "announcements", label: "Announcements", icon: Bell }
   ];
 
   const handleLogout = () => {
@@ -149,9 +147,11 @@ useEffect(() => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Sidebar */}
-      <div className={`bg-white shadow-lg transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'} flex flex-col`}>
+      <div className={`bg-white shadow-lg h-screen fixed top-0 left-0 z-50 flex flex-col transition-all duration-300 ${
+        sidebarCollapsed ? 'w-20' : 'w-64'
+      }`}>
         {/* Sidebar Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -213,15 +213,20 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
-        
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+      {/* Main Content Area */}
+      <div className={`transition-all duration-300 ${
+        sidebarCollapsed ? 'ml-20' : 'ml-64'
+      }`}>
+        {/* Main Content */}
+        <main className="min-h-screen p-6">
           {currentView === "dashboard" && (
             <div className="space-y-6">
+              {/* Page Title */}
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                <p className="text-gray-600">Welcome to your admin dashboard</p>
+              </div>
+
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statsCards.map((stat, index) => (
@@ -231,8 +236,18 @@ useEffect(() => {
                         <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                         <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
                       </div>
-                      <div className={`p-3 rounded-full bg-${stat.color}-100`}>
-                        <stat.icon className={`h-6 w-6 text-${stat.color}-600`} />
+                      <div className={`p-3 rounded-full ${
+                        stat.color === 'blue' ? 'bg-blue-100' :
+                        stat.color === 'green' ? 'bg-green-100' :
+                        stat.color === 'yellow' ? 'bg-yellow-100' :
+                        'bg-purple-100'
+                      }`}>
+                        <stat.icon className={`h-6 w-6 ${
+                          stat.color === 'blue' ? 'text-blue-600' :
+                          stat.color === 'green' ? 'text-green-600' :
+                          stat.color === 'yellow' ? 'text-yellow-600' :
+                          'text-purple-600'
+                        }`} />
                       </div>
                     </div>
                   </div>
@@ -255,27 +270,90 @@ useEffect(() => {
           )}
 
           {currentView === "staff" && (
-            <StaffManagement 
-              staffData={staffData} 
-              setStaffData={setStaffData}
-              departments={departments}
-              roles={roles}
-              genders={genders}
-            />
+            <div>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Staff Management</h1>
+                <p className="text-gray-600">Manage your staff members</p>
+              </div>
+              <StaffManagement 
+                staffData={staffData} 
+                setStaffData={setStaffData}
+                departments={departments}
+                roles={roles}
+                genders={genders}
+              />
+            </div>
           )}
 
-          {currentView === "departments" && <DepartmentManagement />}
+          {currentView === "departments" && (
+            <div>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Department Management</h1>
+                <p className="text-gray-600">Manage company departments</p>
+              </div>
+              <DepartmentManagement />
+            </div>
+          )}
 
+          {currentView === "reports" && (
+            <div>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
+                <p className="text-gray-600">View and generate reports</p>
+              </div>
+              <ReportManagement />
+            </div>
+          )}
 
-          {currentView === "reports" && <ReportManagement />}
-
-          {currentView === "attendance" && <AttendanceManagement/>}
+          {currentView === "attendance" && (
+            <div>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Attendance Management</h1>
+                <p className="text-gray-600">Track employee attendance</p>
+              </div>
+              <AttendanceManagement />
+            </div>
+          )}
           
-          {currentView === "payroll" && <PayrollManagement/>}
+          {currentView === "payroll" && (
+            <div>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Payroll Management</h1>
+                <p className="text-gray-600">Manage employee payroll</p>
+              </div>
+              <PayrollManagement />
+            </div>
+          )}
 
-          {currentView === "tasks" && <TaskManagement/>}
+          {currentView === "tasks" && (
+            <div>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Task Management</h1>
+                <p className="text-gray-600">Assign and track tasks</p>
+              </div>
+              <TaskManagement />
+            </div>
+          )}
 
-          {currentView === "leaves" && <LeaveApproval />}
+          {currentView === "leaves" && (
+            <div>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Leave Management</h1>
+                <p className="text-gray-600">Approve and manage leave requests</p>
+              </div>
+              <LeaveApproval />
+            </div>
+          )}
+
+          {currentView === "announcements" && (
+            <div>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Announcements</h1>
+                <p className="text-gray-600">Create and manage announcements</p>
+              </div>
+              <Announcements />
+            </div>
+          )}
         </main>
       </div>
     </div>
