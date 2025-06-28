@@ -57,4 +57,8 @@ class User extends Authenticatable
     {
         return $this->hasOne(\App\Models\StaffPayroll::class, 'staff_id')->latestOfMany();
     }
+    public function bankDetails()
+    {
+        return $this->hasMany(BankDetail::class, 'user_id');   // FK = user_id
+    }
 }

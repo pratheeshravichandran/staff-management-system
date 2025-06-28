@@ -10,7 +10,7 @@ axios.defaults.withCredentials = true; // Enable cookie support
 
 import LoginPage from './components/LoginPage';
 import AdminDashboard from './components/AdminDashboard';
-import HRDashboard from './components/HRDashboard';
+import HRDashboard from './components/hr/HRDashboard';
 import StaffDashboard from './components/staff/StaffDashboard';
 import ManagerDashboard from './components/manager/ManagerDashboard';
 import DashboardOverview from "./components/staff/DashboardOverview";

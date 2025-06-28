@@ -7,6 +7,7 @@ const PayslipModule = () => {
   const [isHovered, setIsHovered] = useState(false);
   const token = localStorage.getItem("token");
   const [payrollData, setPayrollData] = useState([]);
+  const [bankDetails ,setBankDetails]=useState([]);
   
   useEffect(() => {
     axios.get('/payroll/my', {
@@ -28,6 +29,25 @@ const PayslipModule = () => {
           alert(`❌ Error: ${error.message}`);
         }
       });
+      axios.get('/bank-details/me', {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: token,
+        },
+      })
+        .then((response) => {
+          const  data  = response.data;
+          setBankDetails(data);
+        })
+        .catch((error) => {
+          if (error.response) {
+            alert(`${error.response.data.message}`);
+          } else if (error.request) {
+            alert("No response received from the server.");
+          } else {
+            alert(` ${error.message}`);
+          }
+        });
   }, []);
 
   const record = payrollData[0];
@@ -288,23 +308,23 @@ const PayslipModule = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-300">Bank Name</span>
-                  <span className="font-medium">State Bank of India</span>
+                  <span className="font-medium">{bankDetails.bank_name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">Branch</span>
-                  <span className="font-medium">Anna Nagar</span>
+                  <span className="font-medium">{bankDetails.branch}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">IFSC Code</span>
-                  <span className="font-medium">SBIN0001234</span>
+                  <span className="font-medium">{bankDetails.ifsc_code}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">Account Holder</span>
-                  <span className="font-medium">John Doe</span>
+                  <span className="font-medium">{bankDetails.account_holder_name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">Account Number</span>
-                  <span className="font-medium">****1234</span>
+                  <span className="font-medium">{bankDetails.account_number}</span>
                 </div>
               </div>
             </div>
