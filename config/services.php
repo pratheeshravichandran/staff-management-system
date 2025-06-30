@@ -34,5 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+'firebase' => [
+    'credentials' => storage_path('app/firebase/firebase_credentials.json'),
+    'project_id'  => env('FIREBASE_PROJECT_ID'),
+],
+
 
 ];

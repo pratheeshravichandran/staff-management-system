@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-
+use App\Services\FirebaseService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\{
@@ -22,11 +22,14 @@ use Carbon\Carbon;
 class AuthController extends Controller
 {
     protected FileService $fileService;
+    protected FirebaseService $firebase;
 
-    public function __construct(FileService $fileService)
+    public function __construct(FirebaseService $firebase, FileService $fileService)
     {
+        $this->firebase   = $firebase;
         $this->fileService = $fileService;
     }
+
 
     public function getMetadata(): JsonResponse
     {
