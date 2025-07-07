@@ -36,9 +36,9 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
       icon: Home, 
     },
     { 
-      id: 'attendance', 
-      label: 'Attendance', 
-      icon: Clock, 
+      id: 'manage_staffs', 
+      label: 'Manage Staff', 
+      icon: CheckSquare, 
     },
     { 
       id: 'leave', 

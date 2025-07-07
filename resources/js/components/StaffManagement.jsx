@@ -261,7 +261,7 @@ export default function StaffManagement({ staffData, setStaffData, departments, 
     }
   };
 
-  const filteredStaff = staffData.filter(staff => {
+  const filteredStaff = (staffData ?? []).filter(staff => {
     const matchesSearch = `${staff.firstName} ${staff.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          staff.role.toLowerCase().includes(searchTerm.toLowerCase());
@@ -285,10 +285,6 @@ export default function StaffManagement({ staffData, setStaffData, departments, 
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Staff Members</h3>
-          <p className="text-sm text-gray-500 mt-1">Manage your organization's staff members</p>
-        </div>
         <button
           onClick={() => openModal("add")}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
@@ -328,7 +324,7 @@ export default function StaffManagement({ staffData, setStaffData, departments, 
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="All">All Departments</option>
-            {departments.map(dept => (
+            {(departments ?? []).map(dept => (
               <option key={dept.id} value={dept.name}>{dept.name}</option>
             ))}
           </select>
@@ -590,7 +586,7 @@ export default function StaffManagement({ staffData, setStaffData, departments, 
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="">-- Select Gender --</option>
-                        {genders.map((gender, index) => (
+                        {(genders??[]).map((gender, index) => (
                           <option key={index} value={gender}>
                             {gender}
                           </option>
@@ -653,7 +649,8 @@ export default function StaffManagement({ staffData, setStaffData, departments, 
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="">Select Role</option>
-                        {roles.map(role => (
+                        {(roles??[]).map(role => (
+                          
                           <option key={role.id} value={role.id}>
                             {role.role_name}
                           </option>
@@ -670,7 +667,7 @@ export default function StaffManagement({ staffData, setStaffData, departments, 
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="">Select Department</option>
-                        {departments.map(dept => (
+                        {(departments??[]).map(dept => (
                           <option key={dept.id} value={dept.id}>
                             {dept.name}
                           </option>

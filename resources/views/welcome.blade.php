@@ -7,9 +7,7 @@
     <link href="https://fonts.google.com/specimen/Roboto" rel="stylesheet">
 
     @viteReactRefresh
-    @vite(['resources/js/App.jsx'])
-
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/App.jsx'])
 </head>
 <body>
     <div id="app"></div>

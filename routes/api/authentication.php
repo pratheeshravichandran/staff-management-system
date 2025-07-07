@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
-Route::middleware('auth:sanctum','check.role:Admin')->group(function () {
+Route::middleware('auth:sanctum','check.role:Admin,HR')->group(function () {
     Route::get('/get/metadata', [AuthController::class, 'getMetadata']);
     Route::get('/departments', [AuthController::class, 'getDepartments']);
     Route::get('/get/allstaffs', [AuthController::class, 'getAllStaffs']);

@@ -8,6 +8,7 @@ import AttendanceManagement from "./AttendanceManagement";
 import PayrollManagement from "./PayrollManagement";
 import LeaveApproval from "./LeaveApproval";
 import Announcements from "./Announcements";
+import useStaffMetadata from "./context/hooks/useStaffMetadata";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from "recharts";
 import {
   Bell,
@@ -28,91 +29,19 @@ import {
 } from "lucide-react";
 import StaffManagement from './StaffManagement';
 
+
 export default function AdminDashboard() {
   const [currentView, setCurrentView] = useState(() => {
     return localStorage.getItem("activeTab") || "dashboard";
   });
+  const { departments, roles, genders,staffData ,setStaffData} = useStaffMetadata();
   
-  const [staffData, setStaffData] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [roles, setRoles] = useState([]);
-  const [genders, setGenders] = useState([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
- 
 
   useEffect(() => {
     localStorage.setItem("activeTab", currentView);
   }, [currentView]);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    // Fetch metadata
-    axios.get('/get/metadata', {
-      headers: {
-        Authorization: token,
-      },
-    })
-    .then(response => {
-      const { roles, genders } = response.data;
-      setRoles(roles);
-      setGenders(genders);
-    })
-    .catch(error => {
-      if (error.response) {
-        const backendError = error.response.data.error || "Unknown server error";
-        console.error("Backend Error:", backendError);
-        alert(`Error: ${backendError}`);
-      }
-    });
-
-    // Fetch departments
-    axios.get("/departments", {
-      headers: {
-        Authorization: token,
-      },
-    })
-    .then(response => {
-      setDepartments(response.data.departments);
-    })
-    .catch(error => {
-      if (error.response) {
-        console.error("Departments Error:", error.response.data.error || error.response.data);
-        alert(`Departments Error: ${error.response.data.error || "Unknown error"}`);
-      }
-    });
-
-    // Fetch staff data
-    axios.get("/get/allstaffs", { headers: { Authorization: token } })
-    .then(response => {
-      const formattedStaff = response.data.staff.map(item => ({
-        id: item.id,
-        firstName: item.first_name,
-        lastName: item.last_name,
-        gender: item.gender,
-        email: item.email,
-        phone: item.phone_number,
-        dob: item.dob?.split("T")[0] || "",
-        designation: item.designation,
-        role: item.role_name,
-        department_id: item.department_id || "Unassigned",
-        department: item.department || "Unassigned",
-        status: item.status,
-        joiningDate: item.joining_date?.split("T")[0] || "",
-        address: item.address || "",
-        staffID: item.staff_id,
-        salary: parseFloat(item.salary) || 0,
-        photo: item.profile_pic || null,
-      }));
-      setStaffData(formattedStaff);
-    })
-    .catch(error => {
-      console.error("Staff Fetch Error:", error.response?.data || error);
-    });
-  }, []);
-
-  // Sample dashboard data
   const dashboardData = [
     { name: "Jan", value: 12 },
     { name: "Feb", value: 19 },
@@ -138,7 +67,8 @@ export default function AdminDashboard() {
     { id: "leaves", label: "Leaves", icon: CalendarDays },
     { id: "payroll", label: "Payroll", icon: ClipboardList },
     { id: "tasks", label: "Tasks", icon: ClipboardList },
-    { id: "announcements", label: "Announcements", icon: Bell }
+    { id: "announcements", label: "Announcements", icon: Bell },
+    { id: "bank-details", label: "Bank Details", icon: Bell }
   ];
 
   const handleLogout = () => {

@@ -1,289 +1,325 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, MapPin, Calendar, CheckCircle, XCircle, TrendingUp, Users, Award } from 'lucide-react';
+import { Search, Bell, Settings, User } from 'lucide-react';
 
-const AttendanceModule = () => {
-  const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const [checkInTime, setCheckInTime] = useState(null);
+const AttendanceDashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isPunchedIn, setIsPunchedIn] = useState(false);
+  const [punchInTime, setPunchInTime] = useState(null);
+  const [workingHours, setWorkingHours] = useState(0);
 
-  const attendanceHistory = [
-    { date: '2025-06-03', checkIn: '09:15 AM', checkOut: '06:30 PM', status: 'Present', hours: '9h 15m' },
-    { date: '2025-06-02', checkIn: '09:10 AM', checkOut: '06:25 PM', status: 'Present', hours: '9h 15m' },
-    { date: '2025-06-01', checkIn: '09:20 AM', checkOut: '06:35 PM', status: 'Present', hours: '9h 15m' },
-    { date: '2025-05-31', checkIn: '09:05 AM', checkOut: '06:20 PM', status: 'Present', hours: '9h 15m' },
-    { date: '2025-05-30', checkIn: '--', checkOut: '--', status: 'Absent', hours: '0h 0m' },
-    { date: '2025-05-29', checkIn: '09:25 AM', checkOut: '06:40 PM', status: 'Late', hours: '9h 15m' },
-    { date: '2025-05-28', checkIn: '09:00 AM', checkOut: '06:15 PM', status: 'Present', hours: '9h 15m' },
-  ];
-
+  // Update current time every second
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
+      
+      // Calculate working hours if punched in
+      if (isPunchedIn && punchInTime) {
+        const diffInMs = new Date() - punchInTime;
+        const diffInHours = diffInMs / (1000 * 60 * 60);
+        setWorkingHours(diffInHours);
+      }
     }, 1000);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [isPunchedIn, punchInTime]);
 
-  const handleCheckIn = () => {
-    setIsCheckedIn(true);
-    setCheckInTime(new Date().toLocaleTimeString());
-  };
-
-  const handleCheckOut = () => {
-    setIsCheckedIn(false);
-    setCheckInTime(null);
-  };
-
-  const getCurrentWorkingHours = () => {
-    if (!isCheckedIn || !checkInTime) return '0h 0m';
-    
-    const now = new Date();
-    const checkIn = new Date();
-    const [time, period] = checkInTime.split(' ');
-    const [hours, minutes, seconds] = time.split(':');
-    
-    checkIn.setHours(
-      period === 'PM' && hours !== '12' ? parseInt(hours) + 12 : parseInt(hours),
-      parseInt(minutes),
-      parseInt(seconds)
-    );
-    
-    const diff = now - checkIn;
-    const workingHours = Math.floor(diff / (1000 * 60 * 60));
-    const workingMinutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    return `${workingHours}h ${workingMinutes}m`;
-  };
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', { 
-      weekday: 'long',
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
     });
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'Present':
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'Absent':
-        return <XCircle className="w-4 h-4 text-red-600" />;
-      case 'Late':
-        return <Clock className="w-4 h-4 text-orange-600" />;
-      default:
-        return null;
-    }
+  const formatWorkingHours = (hours) => {
+    const h = Math.floor(hours);
+    const m = Math.floor((hours - h) * 60);
+    const s = Math.floor(((hours - h) * 60 - m) * 60);
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Attendance Dashboard</h1>
-          <p className="text-gray-600">{formatDate(currentTime)}</p>
-          <p className="text-2xl font-mono text-blue-600 mt-2">
-            {currentTime.toLocaleTimeString()}
-          </p>
-        </div>
+  const handlePunchIn = () => {
+    setIsPunchedIn(true);
+    setPunchInTime(new Date());
+    setWorkingHours(0);
+  };
 
-        {/* Today's Attendance Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 flex items-center">
-              <Calendar className="w-6 h-6 mr-3 text-blue-600" />
-              Today's Attendance
-            </h3>
-            <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
-              isCheckedIn 
-                ? 'bg-green-100 text-green-800 border border-green-200' 
-                : 'bg-gray-100 text-gray-800 border border-gray-200'
-            }`}>
-              {isCheckedIn ? '🟢 Active' : '⚪ Inactive'}
-            </div>
-          </div>
+  const handlePunchOut = () => {
+    setIsPunchedIn(false);
+    setPunchInTime(null);
+    setWorkingHours(0);
+  };
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
-              <div className="flex items-center justify-center mb-3">
-                <div className={`p-3 rounded-full ${isCheckedIn ? 'bg-green-500' : 'bg-gray-400'}`}>
-                  <CheckCircle className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Status</p>
-              <p className={`text-xl font-bold ${isCheckedIn ? 'text-green-600' : 'text-gray-600'}`}>
-                {isCheckedIn ? 'Checked In' : 'Not Checked In'}
-              </p>
-            </div>
+  // Sample data
+  const attendanceData = [
+    { id: 1, date: '18 Feb 2019', punchIn: '10 AM', punchOut: '7 PM', production: '9 hrs', workingHours: '8 hrs', overtime: '2 hrs' },
+    { id: 2, date: '20 Feb 2019', punchIn: '10 AM', punchOut: '7 PM', production: '9 hrs', workingHours: '9 hrs', overtime: '0 hrs' },
+    { id: 3, date: '21 Feb 2019', punchIn: '10 AM', punchOut: '7 PM', production: '9 hrs', workingHours: '9 hrs', overtime: '0 hrs' },
+    { id: 4, date: '22 Feb 2019', punchIn: '10 AM', punchOut: '7 PM', production: '9 hrs', workingHours: '8 hrs', overtime: '1 hrs' },
+    { id: 5, date: '23 Feb 2019', punchIn: '10 AM', punchOut: '7 PM', production: '9 hrs', workingHours: '6 hrs', overtime: '3 hrs' },
+    { id: 6, date: '24 Feb 2019', punchIn: '10 AM', punchOut: '7 PM', production: '9 hrs', workingHours: '9 hrs', overtime: '0 hrs' }
+  ];
 
-            <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
-              <div className="flex items-center justify-center mb-3">
-                <div className="p-3 rounded-full bg-purple-500">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Check In Time</p>
-              <p className="text-xl font-bold text-purple-600">{checkInTime || '--:--'}</p>
-            </div>
+  const todayActivity = [
+    { time: '9:00 AM', action: 'Punch In at', status: 'in' },
+    { time: '11:00 AM', action: 'Punch Out at', status: 'out' },
+    { time: '11:30 AM', action: 'Punch In at', status: 'in' },
+    { time: '01:30 PM', action: 'Punch Out at', status: 'out' },
+    { time: '02:30 AM', action: 'Punch In at', status: 'in' },
+    { time: '04:30 AM', action: 'Punch In at', status: 'in' },
+    { time: '07:00 AM', action: 'Punch Out at', status: 'out' }
+  ];
 
-            <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
-              <div className="flex items-center justify-center mb-3">
-                <div className="p-3 rounded-full bg-orange-500">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Working Hours</p>
-              <p className="text-xl font-bold text-orange-600">{getCurrentWorkingHours()}</p>
-            </div>
-          </div>
-          
-          <div className="flex gap-4 justify-center">
-            {!isCheckedIn ? (
-              <button
-                onClick={handleCheckIn}
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-8 rounded-xl transition-all duration-200 flex items-center transform hover:scale-105 shadow-lg hover:shadow-xl"
-              >
-                <CheckCircle className="w-5 h-5 mr-2" />
-                Check In
-              </button>
-            ) : (
-              <button
-                onClick={handleCheckOut}
-                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 px-8 rounded-xl transition-all duration-200 flex items-center transform hover:scale-105 shadow-lg hover:shadow-xl"
-              >
-                <XCircle className="w-5 h-5 mr-2" />
-                Check Out
-              </button>
-            )}
-            <button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-8 rounded-xl transition-all duration-200 flex items-center transform hover:scale-105 shadow-lg hover:shadow-xl">
-              <MapPin className="w-5 h-5 mr-2" />
-              View Location
-            </button>
-          </div>
-        </div>
+  const CircularProgress = ({ percentage, hours }) => {
+    const radius = 80;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDasharray = circumference;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
-        {/* Attendance Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-green-100 rounded-xl">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-              <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">+2 this week</span>
-            </div>
-            <p className="text-3xl font-bold text-green-600 mb-1">22</p>
-            <p className="text-sm text-gray-600">Present Days</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-red-100 rounded-xl">
-                <XCircle className="w-6 h-6 text-red-600" />
-              </div>
-              <span className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded-full">-1 this week</span>
-            </div>
-            <p className="text-3xl font-bold text-red-600 mb-1">2</p>
-            <p className="text-sm text-gray-600">Absent Days</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-orange-100 rounded-xl">
-                <Clock className="w-6 h-6 text-orange-600" />
-              </div>
-              <span className="text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded-full">Same as last week</span>
-            </div>
-            <p className="text-3xl font-bold text-orange-600 mb-1">1</p>
-            <p className="text-sm text-gray-600">Late Arrivals</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Award className="w-6 h-6 text-blue-600" />
-              </div>
-              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">Excellent</span>
-            </div>
-            <p className="text-3xl font-bold text-blue-600 mb-1">95%</p>
-            <p className="text-sm text-gray-600">Attendance Rate</p>
-          </div>
-        </div>
-
-        {/* Attendance History */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 flex items-center">
-              <Users className="w-6 h-6 mr-3 text-blue-600" />
-              Attendance History
-            </h3>
-            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-              View All →
-            </button>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                    Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                    Check In
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                    Check Out
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                    Working Hours
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendanceHistory.map((record, index) => (
-                  <tr key={index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors duration-150">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      {new Date(record.date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric' 
-                      })}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {record.checkIn}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {record.checkOut}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
-                      {record.hours}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {getStatusIcon(record.status)}
-                        <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${
-                          record.status === 'Present' 
-                            ? 'bg-green-100 text-green-800' 
-                            : record.status === 'Late'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {record.status}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    return (
+      <div className="relative w-48 h-48 mx-auto mb-6">
+        <svg className="w-48 h-48 transform -rotate-90" viewBox="0 0 200 200">
+          <circle
+            cx="100"
+            cy="100"
+            r={radius}
+            stroke="#e5e7eb"
+            strokeWidth="8"
+            fill="transparent"
+          />
+          <circle
+            cx="100"
+            cy="100"
+            r={radius}
+            stroke="#3b82f6"
+            strokeWidth="8"
+            fill="transparent"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-300"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-gray-900">{hours} hrs</div>
           </div>
         </div>
       </div>
+    );
+  };
+
+  const ProgressBar = ({ label, current, total, color }) => {
+    const percentage = (current / total) * 100;
+    
+    return (
+      <div className="mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-medium text-gray-700">{label}</span>
+          <span className="text-sm text-gray-500">{current} / {total} hrs</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full ${color}`}
+            style={{ width: `${percentage}%` }}
+          ></div>
+        </div>
+      </div>
+    );
+  };
+
+  const BarChart = () => {
+    const data = [40, 60, 35, 80, 25, 90, 45, 70, 30, 85, 55, 75];
+    const maxValue = Math.max(...data);
+
+    return (
+      <div className="flex items-end justify-between h-32 mt-4">
+        {data.map((value, index) => (
+          <div key={index} className="flex flex-col items-center">
+            <div
+              className="bg-blue-500 rounded-t-sm w-4 transition-all duration-300"
+              style={{ height: `${(value / maxValue) * 100}%` }}
+            ></div>
+            <span className="text-xs text-gray-500 mt-1">{index + 1}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
+            <p className="text-sm text-gray-500">Dashboard / Attendance</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search here..."
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <Bell className="w-5 h-5 text-gray-600 cursor-pointer" />
+            <Settings className="w-5 h-5 text-gray-600 cursor-pointer" />
+            <div className="flex items-center space-x-2">
+              <User className="w-5 h-5 text-gray-600" />
+              <span className="text-sm text-gray-700">Admin</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="p-6">
+        {/* Top Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Timesheet Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Timesheet</h3>
+              <span className="text-sm text-gray-500">{currentTime.toLocaleDateString()}</span>
+            </div>
+            <div className="text-center">
+              {/* Current Time Display */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Current Time</p>
+                <p className="text-2xl font-bold text-blue-600">{formatTime(currentTime)}</p>
+              </div>
+              
+              {/* Working Hours Display */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Working Hours</p>
+                <p className="text-xl font-semibold text-green-600">
+                  {isPunchedIn ? formatWorkingHours(workingHours) : '00:00:00'}
+                </p>
+              </div>
+
+              {isPunchedIn && (
+                <p className="text-sm text-gray-600 mb-4">
+                  Punched In at: {punchInTime?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+              
+              <CircularProgress 
+                percentage={isPunchedIn ? Math.min((workingHours / 8) * 100, 100) : 0} 
+                hours={isPunchedIn ? workingHours.toFixed(2) : '0.00'} 
+              />
+              
+              {/* Punch In/Out Buttons */}
+              <div className="space-y-2 mb-4">
+                {!isPunchedIn ? (
+                  <button 
+                    onClick={handlePunchIn}
+                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors w-full"
+                  >
+                    PUNCH IN
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handlePunchOut}
+                    className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors w-full"
+                  >
+                    PUNCH OUT
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex justify-center text-sm text-gray-600">
+                <div>
+                  <p className="font-medium">Status</p>
+                  <p className={isPunchedIn ? 'text-green-600' : 'text-red-600'}>
+                    {isPunchedIn ? 'Punched In' : 'Punched Out'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Statistics Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Statistics</h3>
+            <div className="space-y-4">
+              <ProgressBar label="Today" current={3.45} total={8} color="bg-green-500" />
+              <ProgressBar label="This Week" current={28} total={40} color="bg-blue-500" />
+              <ProgressBar label="This Month" current={90} total={160} color="bg-yellow-500" />
+              <ProgressBar label="Remaining" current={90} total={160} color="bg-blue-600" />
+              <ProgressBar label="Overtime" current={5} total={5} color="bg-orange-500" />
+            </div>
+          </div>
+
+          {/* Today Activity Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Today Activity</h3>
+            <div className="space-y-3">
+              {todayActivity.map((activity, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${activity.status === 'in' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700">{activity.action}</p>
+                    <p className="text-xs text-gray-500">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Attendance List */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Attendance List</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S. No</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Punch In</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Punch Out</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Production</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Working Hours</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overtime</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {attendanceData.map((record) => (
+                    <tr key={record.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.date}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.punchIn}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.punchOut}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.production}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.workingHours}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.overtime}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Daily Records Chart */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Daily Records</h3>
+            <div className="text-center mb-4">
+              <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">12 min</span>
+            </div>
+            <BarChart />
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
 
-export default AttendanceModule;
+export default AttendanceDashboard;

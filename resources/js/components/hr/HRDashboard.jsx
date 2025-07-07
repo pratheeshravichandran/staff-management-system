@@ -27,11 +27,14 @@ import PayslipModule from '../staff/PayslipModule';
 import BankDetails from './BankDetails';
 import TasksModule from '../staff/TasksModule';
 import AnnouncementsModule from '../Announcements';
+import ManageStaff from '../StaffManagement';
+import useStaffMetadata from "../context/hooks/useStaffMetadata";
 import Sidebar from './Sidebar';
 
 
 const HRDashboard = () => {
   const token = localStorage.getItem("token");
+  const { departments, roles, genders,staffData ,setStaffData} = useStaffMetadata();
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem("activeTab") || "dashboard";
   });
@@ -84,6 +87,11 @@ const HRDashboard = () => {
         case 'tasks': return <TasksModule />;
         case 'announcements': return <AnnouncementsModule />;
         case 'bank_details': return <BankDetails />;
+        case 'manage_staffs': return <ManageStaff  staffData={staffData} 
+        setStaffData={setStaffData}
+        departments={departments}
+        roles={roles}
+        genders={genders}/>;
         default: return <DashboardOverview />;
       }
     };
