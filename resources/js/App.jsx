@@ -16,6 +16,7 @@ import StaffDashboard from './components/staff/StaffDashboard';
 import ManagerDashboard from './components/manager/ManagerDashboard';
 import DashboardOverview from "./components/staff/DashboardOverview";
 import LeaveRequestPage from "./components/staff/LeaveManagement";
+import OTPLogin from './components/OTPLogin';
 
 ReactDOM.createRoot(document.getElementById('app')).render(
   <AuthProvider>
@@ -28,6 +29,7 @@ ReactDOM.createRoot(document.getElementById('app')).render(
       <Route path="/manager-dashboard" element={<ManagerDashboard />} />
       <Route path="dashboard" element={<DashboardOverview />} />
       <Route path="/leave-request" element={<LeaveRequestPage />} />
+      <Route path="/otp-login" element={<OTPLogin />} />
     </Routes>
   </BrowserRouter>
   </AuthProvider>

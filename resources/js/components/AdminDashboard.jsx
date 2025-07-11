@@ -8,6 +8,7 @@ import AttendanceManagement from "./AttendanceManagement";
 import PayrollManagement from "./PayrollManagement";
 import LeaveApproval from "./LeaveApproval";
 import Announcements from "./Announcements";
+import BankDetails from "./hr/BankDetails";
 import useStaffMetadata from "./context/hooks/useStaffMetadata";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from "recharts";
 import {
@@ -238,7 +239,7 @@ export default function AdminDashboard() {
           {currentView === "attendance" && (
             <div>
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Attendance Management</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
                 <p className="text-gray-600">Track employee attendance</p>
               </div>
               <AttendanceManagement />
@@ -282,6 +283,15 @@ export default function AdminDashboard() {
                 <p className="text-gray-600">Create and manage announcements</p>
               </div>
               <Announcements />
+            </div>
+          )}
+
+{currentView === "bank-details" && (
+            <div>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Bank Details</h1>
+              </div>
+              <BankDetails />
             </div>
           )}
         </main>

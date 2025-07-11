@@ -162,8 +162,6 @@ const StaffBankDetailsManager = () => {
   }
 };
 
-  
-
   const filteredBankDetails = bankDetails.filter(item =>
     item.user?.full_name?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
     item.bank_name?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
@@ -261,7 +259,7 @@ const StaffBankDetailsManager = () => {
 
     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-lg">{record.user.full_name}</h3>
+                      <h3 className="font-semibold text-gray-900 text-lg">{record.user?.full_name}</h3>
                       <p className="text-gray-500 text-sm">{record.account_holder_name}</p>
                     </div>
                   </div>

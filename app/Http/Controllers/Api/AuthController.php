@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-use App\Services\FirebaseService;
+use App\Services\FirebaseOtpService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\{
@@ -24,9 +24,9 @@ class AuthController extends Controller
     protected FileService $fileService;
     protected FirebaseService $firebase;
 
-    public function __construct(FirebaseService $firebase, FileService $fileService)
+    public function __construct( FileService $fileService)
     {
-        $this->firebase   = $firebase;
+        
         $this->fileService = $fileService;
     }
 
@@ -393,5 +393,50 @@ class AuthController extends Controller
                 'details' => $e->getMessage(),
             ], 500);
         }
+    }
+
+
+    public function send(Request $request, FirebaseOtpService $firebase)
+    {
+        $data = $request->validate([
+            'phone'           => ['required', 'regex:/^\+[1-9]\d{1,14}$/'],   // E.164
+            'recaptcha_token' => ['required', 'string'],
+        ]);
+
+        $sessionInfo = $firebase->send($data['phone'], $data['recaptcha_token']);
+
+        Cache::put('otp_session_'.$data['phone'], $sessionInfo, now()->addMinutes(env('OTP_SESSION_TTL', 10)));
+
+        return response()->json(['session_info' => $sessionInfo], 200);
+    }
+
+    public function verify(Request $request, FirebaseOtpService $firebase)
+    {
+        $data = $request->validate([
+            'phone' => ['required', 'regex:/^\+[1-9]\d{1,14}$/'],
+            'code'  => ['required', 'digits:6'],
+        ]);
+
+        $sessionInfo = Cache::pull('otp_session_'.$data['phone']);
+
+        abort_unless($sessionInfo, 422, 'OTP session expired or not found');
+
+        try {
+            $firebaseResponse = $firebase->verify($sessionInfo, $data['code']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Invalid or expired code'], 422);
+        }
+
+        // Create / fetch local user
+        $user = User::firstOrCreate(['phone' => $data['phone']]);
+        $token = $user->createToken('mobile')->plainTextToken;
+
+        return response()->json([
+            'access_token'   => $token,
+            'token_type'     => 'Bearer',
+            'expires_in'     => 3600,                      // Sanctum default
+            'firebase_uid'   => $firebaseResponse['localId'] ?? null,
+            'is_new_user'    => $firebaseResponse['isNewUser'] ?? false,
+        ], 200);
     }
 }

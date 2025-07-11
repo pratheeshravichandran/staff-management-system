@@ -112,4 +112,8 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    'firebase' => [
+        'api_key' => env('FIREBASE_API_KEY'),
+    ],
+
 ];

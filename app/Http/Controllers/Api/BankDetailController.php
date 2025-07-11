@@ -33,28 +33,33 @@ class BankDetailController extends Controller
     }
 
     public function index(Request $request)
-{
-    try {
-        $data = BankDetail::with('user:id,first_name,last_name,profile_pic,staff_id')
-            ->get()
-            ->map(function ($bank) {
-                // Convert profile_pic to a full URL
-                $bank->user->full_name = trim($bank->user->first_name . ' ' . $bank->user->last_name);
-
-                if ($bank->user && $bank->user->profile_pic) {
-                    $bank->user->profile_pic = $this->getUrl($bank->user->profile_pic);
-                }
-                return $bank;
-            });
-
-        return response()->json($data, 200);
-    } catch (Throwable $e) {
-        return response()->json([
-            'message' => 'Could not fetch bank details',
-            'error'   => $e->getMessage(),
-        ], 500);
+    {
+        try {
+            $data = BankDetail::with('user:id,first_name,last_name,profile_pic,staff_id')
+                ->get()
+                ->map(function ($bank) {
+                    if ($bank->user) {
+                        $bank->user->full_name = trim($bank->user->first_name . ' ' . $bank->user->last_name);
+    
+                        if ($bank->user->profile_pic) {
+                            $bank->user->profile_pic = $this->getUrl($bank->user->profile_pic);
+                        }
+                    } else {
+                        $bank->user = null; // handle missing user
+                    }
+    
+                    return $bank;
+                });
+    
+            return response()->json($data, 200);
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Could not fetch bank details',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
     }
-}
+    
 
     public function store(Request $request)
     {

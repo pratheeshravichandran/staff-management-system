@@ -18,3 +18,7 @@ Route::middleware('auth:sanctum','check.role:Admin,HR,Staff,Manager')->group(fun
     Route::get('/auth-user', [AuthController::class, 'getAuthenticatedUser']);
     Route::post('/update/user/{id}', [AuthController::class, 'updateUser']);
 });
+Route::prefix('otp')->middleware('api')->group(function () {
+    Route::post('/send',   [AuthController::class, 'send']);
+    Route::post('/verify', [AuthController::class, 'verify']);
+});
