@@ -132,9 +132,6 @@ const LeaveApprovalSystem = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Leave Management
-            </h1>
             <p className="text-gray-600 mt-1 flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Staff Leave Approvals

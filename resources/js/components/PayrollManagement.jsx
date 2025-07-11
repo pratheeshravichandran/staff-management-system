@@ -78,8 +78,8 @@ const PayrollManagement = () => {
  
   // Filter staff based on search criteria
   const filteredStaff = staffList.filter(staff => {
-    const matchesName = staff.name.toLowerCase().includes(searchName.toLowerCase());
-    const matchesStaffId = staff.staffId.toLowerCase().includes(searchstaffId.toLowerCase());
+    const matchesName = staff.name?.toLowerCase().includes(searchName?.toLowerCase());
+    const matchesStaffId = staff.staffId?.toLowerCase().includes(searchstaffId?.toLowerCase());
     const matchesDepartment = selectedDepartment === '' || selectedDepartment === 'All' || staff.department === selectedDepartment;
   
     return matchesName && matchesStaffId && matchesDepartment;

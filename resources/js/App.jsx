@@ -17,12 +17,14 @@ import ManagerDashboard from './components/manager/ManagerDashboard';
 import DashboardOverview from "./components/staff/DashboardOverview";
 import LeaveRequestPage from "./components/staff/LeaveManagement";
 import OTPLogin from './components/OTPLogin';
+import LandingPage from './components/LandingPage';
 
 ReactDOM.createRoot(document.getElementById('app')).render(
   <AuthProvider>
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route path="/hr-dashboard" element={<HRDashboard />} />
       <Route path="/staff-dashboard" element={<StaffDashboard />} />
