@@ -1,70 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import useStaffMetadata from "./context/hooks/useStaffMetadata";
 import { Plus, Search, Filter, Calendar, User, CheckCircle, Clock, AlertCircle, XCircle } from "lucide-react";
 
 export default function TaskManagement() {
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      title: "Update Employee Handbook",
-      description: "Review and update the employee handbook with new policies",
-      assignedTo: "John Smith",
-      department: "HR",
-      priority: "High",
-      status: "In Progress",
-      dueDate: "2025-06-15",
-      createdDate: "2025-06-01",
-      progress: 60
-    },
-    {
-      id: 2,
-      title: "Quarterly Budget Review",
-      description: "Analyze Q2 budget performance and prepare Q3 projections",
-      assignedTo: "Sarah Johnson",
-      department: "Finance",
-      priority: "Medium",
-      status: "Pending",
-      dueDate: "2025-06-20",
-      createdDate: "2025-06-03",
-      progress: 0
-    },
-    {
-      id: 3,
-      title: "Website Maintenance",
-      description: "Update website content and fix reported bugs",
-      assignedTo: "Mike Chen",
-      department: "IT",
-      priority: "Low",
-      status: "Completed",
-      dueDate: "2025-06-10",
-      createdDate: "2025-05-28",
-      progress: 100
-    },
-    {
-        id: 4,
-        title: "Update Employee Handbook",
-        description: "Review and update the employee handbook with new policies",
-        assignedTo: "John Smith",
-        department: "HR",
-        priority: "High",
-        status: "In Progress",
-        dueDate: "2025-06-15",
-        createdDate: "2025-06-01",
-        progress: 60
-      },
-      {
-        id: 4,
-        title: "Update Employee Handbook",
-        description: "Review and update the employee handbook with new policies",
-        assignedTo: "John Smith",
-        department: "HR",
-        priority: "High",
-        status: "In Progress",
-        dueDate: "2025-06-15",
-        createdDate: "2025-06-01",
-        progress: 60
-      },
-      
-  ]);
+  const token=localStorage.getItem("token");
+  const [tasks, setTasks] = useState([ ]);
 
   const [showAddTask, setShowAddTask] = useState(false);
   const [filterStatus, setFilterStatus] = useState("All");
@@ -76,20 +17,35 @@ export default function TaskManagement() {
     department: "",
     priority: "Medium",
     dueDate: "",
-    status: "Pending"
+    status: "pending"
   });
 
-  const staff = ["John Smith", "Sarah Johnson", "Mike Chen", "Emily Davis", "Robert Wilson", "Lisa Anderson"];
-  const departments = ["HR", "Finance", "IT", "Marketing", "Operations", "Sales"];
-  const statuses = ["Pending", "In Progress", "Completed", "Cancelled"];
+  const[staff, setStaffs]=useState([]);
+  useEffect(() => {
+    const api = axios.create({
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  
+    api.get("/get-staffs").then(r => {
+      setStaffs(r.data.staff ?? []);
+      console.log(r.data.staff);
+    });
+
+    api.get("/view-all-task").then(r=>{
+      setTasks(r.data.data??[]);
+    });
+  }, []); // 👈 runs only once after initial render
+  
+ const departments=[];
+  const statuses = ["pending", "in_progress", "completed", "cancelled"];
   const priorities = ["Low", "Medium", "High"];
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case "Completed": return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case "In Progress": return <Clock className="w-4 h-4 text-blue-500" />;
-      case "Pending": return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case "Cancelled": return <XCircle className="w-4 h-4 text-red-500" />;
+      case "completed": return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case "in_progress": return <Clock className="w-4 h-4 text-blue-500" />;
+      case "pending": return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+      case "cancelled": return <XCircle className="w-4 h-4 text-red-500" />;
       default: return <AlertCircle className="w-4 h-4 text-gray-500" />;
     }
   };
@@ -103,32 +59,82 @@ export default function TaskManagement() {
     }
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (newTask.title && newTask.assignedTo && newTask.dueDate) {
-      const task = {
-        ...newTask,
-        id: tasks.length + 1,
-        createdDate: new Date().toISOString().split('T')[0],
-        progress: 0
+      const payload = {
+        task_title: newTask.title,
+        description: newTask.description,
+        staff_id: newTask.assignedTo,
+        department_id: newTask.department,
+        priority: newTask.priority,
+        due_date: newTask.dueDate
       };
-      setTasks([...tasks, task]);
-      setNewTask({
-        title: "",
-        description: "",
-        assignedTo: "",
-        department: "",
-        priority: "Medium",
-        dueDate: "",
-        status: "Pending"
-      });
-      setShowAddTask(false);
+  
+      try {
+        const api = axios.create({
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+  
+        const response = await api.post('/assign-task', payload);
+  
+        if (response.data.status) {
+          const addedTask = {
+            id: response.data.data.id,
+            title: response.data.data.task_title,
+            description: response.data.data.description,
+            assignedTo: newTask.assignedTo,
+            department: newTask.department,
+            priority: response.data.data.priority,
+            dueDate: response.data.data.due_date,
+            createdDate: response.data.data.created_at.split("T")[0],
+            progress: 0,
+            status: "pending"
+          };
+  
+          setTasks([...tasks, addedTask]);
+  
+          setNewTask({
+            title: "",
+            description: "",
+            assignedTo: "",
+            department: "",
+            priority: "Medium",
+            dueDate: "",
+            status: "pending"
+          });
+  
+          setShowAddTask(false);
+          alert(response.data.message); // "Task assigned successfully."
+        }
+      } catch (error) {
+        console.error("Backend error:", error);
+  
+        if (error.response) {
+          alert(
+            error.response.data.message ||
+            JSON.stringify(error.response.data)
+          );
+        } else if (error.request) {
+          alert("No response from server. Please check your connection.");
+        } else {
+          alert("Request error: " + error.message);
+        }
+      }
+    } else {
+      alert("Please fill in all required fields.");
     }
   };
+  
+  
+  
 
   const updateTaskStatus = (taskId, newStatus) => {
     setTasks(tasks.map(task => 
       task.id === taskId 
-        ? { ...task, status: newStatus, progress: newStatus === "Completed" ? 100 : task.progress }
+        ? { ...task, status: newStatus, progress: newStatus === "completed" ? 100 : task.progress }
         : task
     ));
   };
@@ -139,7 +145,7 @@ export default function TaskManagement() {
         ? { 
             ...task, 
             progress: progress,
-            status: progress === 100 ? "Completed" : progress > 0 ? "In Progress" : "Pending"
+            status: progress === 100 ? "completed" : progress > 0 ? "in_progress" : "pending"
           }
         : task
     ));
@@ -147,18 +153,17 @@ export default function TaskManagement() {
 
   const filteredTasks = tasks.filter(task => {
     const matchesStatus = filterStatus === "All" || task.status === filterStatus;
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.assignedTo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.department.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = task.task_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         task.staff_id.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesStatus && matchesSearch;
   });
 
   const taskStats = {
     total: tasks.length,
-    pending: tasks.filter(t => t.status === "Pending").length,
-    inProgress: tasks.filter(t => t.status === "In Progress").length,
-    completed: tasks.filter(t => t.status === "Completed").length,
-    overdue: tasks.filter(t => new Date(t.dueDate) < new Date() && t.status !== "Completed").length
+    pending: tasks.filter(t => t.status === "pending").length,
+    inProgress: tasks.filter(t => t.status === "in_progress").length,
+    completed: tasks.filter(t => t.status === "completed").length,
+    overdue: tasks.filter(t => new Date(t.dueDate) < new Date() && t.status !== "completed").length
   };
 
   return (
@@ -185,15 +190,15 @@ export default function TaskManagement() {
         </div>
         <div className="bg-yellow-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-yellow-700">{taskStats.pending}</div>
-          <div className="text-sm text-yellow-600">Pending</div>
+          <div className="text-sm text-yellow-600">pending</div>
         </div>
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-blue-700">{taskStats.inProgress}</div>
-          <div className="text-sm text-blue-600">In Progress</div>
+          <div className="text-sm text-blue-600">in_progress</div>
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-green-700">{taskStats.completed}</div>
-          <div className="text-sm text-green-600">Completed</div>
+          <div className="text-sm text-green-600">completed</div>
         </div>
         <div className="bg-red-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-red-700">{taskStats.overdue}</div>
@@ -236,7 +241,7 @@ export default function TaskManagement() {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   {getStatusIcon(task.status)}
-                  <h4 className="text-lg font-semibold text-gray-900">{task.title}</h4>
+                  <h4 className="text-lg font-semibold text-gray-900">{task.task_title}</h4>
                   <span className={`px-2 py-1 text-xs border rounded-full ${getPriorityColor(task.priority)}`}>
                     {task.priority}
                   </span>
@@ -246,15 +251,11 @@ export default function TaskManagement() {
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
                   <div className="flex items-center gap-1">
                     <User className="w-4 h-4" />
-                    <span>{task.assignedTo}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                    <span>{task.department}</span>
+                    <span>{`${task.staff.first_name} ${task.staff.last_name}`}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                    <span>Due: {new Date(task.due_date).toLocaleDateString()}</span>
                   </div>
                 </div>
 
@@ -342,25 +343,10 @@ export default function TaskManagement() {
                 >
                   <option value="">Select staff member</option>
                   {staff.map(person => (
-                    <option key={person} value={person}>{person}</option>
+                    <option key={person.id} value={person.id}>{person.full_name}</option>
                   ))}
                 </select>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                <select
-                  value={newTask.department}
-                  onChange={(e) => setNewTask({...newTask, department: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select department</option>
-                  {departments.map(dept => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                 <select

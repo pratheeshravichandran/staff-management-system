@@ -13,7 +13,7 @@ export default function useStaffMetadata() {
     if (!token) return;
 
     const api = axios.create({
-      headers: { Authorization: `Bearer ${token}` } // add Bearer if needed
+      headers: { Authorization: `Bearer ${token}` } 
     });
 
     api.get("/get/metadata").then(r => {
